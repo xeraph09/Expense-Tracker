@@ -24,26 +24,32 @@ if "expenses" not in st.session_state:
 
 selected_currency = st.selectbox("Display currency", list(EXCHANGE_RATES.keys()), index=0)
 
-rate_info = " | ".join(
-    f"1 USD = {rate:.2f} {currency}" for currency, rate in EXCHANGE_RATES.items() if currency != "USD"
-)
-st.write(f"**Exchange rates:** {rate_info}")
+def parse_amount(value: str) -> float | None:
+    try:
+        parsed = float(value)
+        return parsed if parsed >= 0 else None
+    except ValueError:
+        return None
 
 with st.form("add_expense_form"):
     description = st.text_input("Expense description")
-    amount = st.number_input("Amount", min_value=0.0, step=0.01)
+    amount_text = st.text_input("Amount", placeholder="Enter amount")
     currency = st.selectbox("Currency", list(EXCHANGE_RATES.keys()))
     category = st.selectbox("Category", CATEGORIES)
     add_expense = st.form_submit_button("Add Expense")
 
 if add_expense:
-    st.session_state.expenses.append({
-        "description": description,
-        "amount": amount,
-        "currency": currency,
-        "category": category,
-    })
-    st.success("Expense added")
+    amount = parse_amount(amount_text)
+    if amount is None:
+        st.error("Please enter a valid amount greater than or equal to 0.")
+    else:
+        st.session_state.expenses.append({
+            "description": description,
+            "amount": amount,
+            "currency": currency,
+            "category": category,
+        })
+        st.success("Expense added")
 
 if st.session_state.edit_index is not None:
     index = st.session_state.edit_index
@@ -51,7 +57,7 @@ if st.session_state.edit_index is not None:
     st.subheader(f"Edit expense #{index + 1}")
 
     edit_description = st.text_input("Description", value=expense["description"], key="edit_description")
-    edit_amount = st.number_input("Amount", min_value=0.0, value=expense["amount"], step=0.01, key="edit_amount")
+    edit_amount_text = st.text_input("Amount", value=str(expense["amount"]), key="edit_amount")
     edit_currency = st.selectbox(
         "Currency",
         list(EXCHANGE_RATES.keys()),
@@ -66,14 +72,18 @@ if st.session_state.edit_index is not None:
     )
 
     if st.button("Save Changes", key="save_changes"):
-        st.session_state.expenses[index] = {
-            "description": edit_description,
-            "amount": edit_amount,
-            "currency": edit_currency,
-            "category": edit_category,
-        }
-        st.session_state.edit_index = None
-        st.success("Expense updated")
+        amount = parse_amount(edit_amount_text)
+        if amount is None:
+            st.error("Please enter a valid amount greater than or equal to 0.")
+        else:
+            st.session_state.expenses[index] = {
+                "description": edit_description,
+                "amount": amount,
+                "currency": edit_currency,
+                "category": edit_category,
+            }
+            st.session_state.edit_index = None
+            st.success("Expense updated")
 
     if st.button("Cancel", key="cancel_edit"):
         st.session_state.edit_index = None
