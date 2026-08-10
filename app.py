@@ -22,8 +22,6 @@ if "expenses" not in st.session_state:
     st.session_state.expenses = []
     st.session_state.edit_index = None
 
-selected_currency = st.selectbox("Display currency", list(EXCHANGE_RATES.keys()), index=0)
-
 def parse_amount(value: str) -> float | None:
     try:
         parsed = float(value)
@@ -96,26 +94,19 @@ else:
     total_usd = 0.0
 
     for index, expense in enumerate(st.session_state.expenses):
-        from_rate = EXCHANGE_RATES[expense["currency"]]
-        to_rate = EXCHANGE_RATES[selected_currency]
-        amount_usd = expense["amount"] / from_rate
-        display_amount = amount_usd * to_rate
-        total_usd += amount_usd
+        total_usd += expense["amount"] / EXCHANGE_RATES[expense["currency"]]
 
         cols = st.columns([4, 2, 1, 1])
         cols[0].write(f"**{expense['description']}**")
         cols[0].write(f"{expense['category']} ({expense['currency']})")
-        cols[1].write(f"{CURRENCY_SYMBOLS[selected_currency]}{display_amount:.2f} {selected_currency}")
+        cols[1].write(f"{CURRENCY_SYMBOLS[expense['currency']]}{expense['amount']:.2f} {expense['currency']}")
 
         if cols[2].button("Edit", key=f"edit-{index}"):
             st.session_state.edit_index = index
-            st.experimental_rerun()
 
         if cols[3].button("Delete", key=f"delete-{index}"):
             st.session_state.expenses.pop(index)
             st.success("Expense deleted")
-            st.experimental_rerun()
 
-    total_amount = total_usd * EXCHANGE_RATES[selected_currency]
-    st.write(f"**Total:** {CURRENCY_SYMBOLS[selected_currency]}{total_amount:.2f} {selected_currency}")
+    st.write(f"**Total (USD):** ${total_usd:.2f}")
 
