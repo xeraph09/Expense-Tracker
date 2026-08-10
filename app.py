@@ -91,10 +91,11 @@ st.subheader("Your Expenses")
 if not st.session_state.expenses:
     st.info("No expenses yet. Add one above.")
 else:
-    total_usd = 0.0
+    totals_by_currency = {}
 
     for index, expense in enumerate(st.session_state.expenses):
-        total_usd += expense["amount"] / EXCHANGE_RATES[expense["currency"]]
+        totals_by_currency.setdefault(expense["currency"], 0.0)
+        totals_by_currency[expense["currency"]] += expense["amount"]
 
         cols = st.columns([4, 2, 1, 1])
         cols[0].write(f"**{expense['description']}**")
@@ -108,5 +109,7 @@ else:
             st.session_state.expenses.pop(index)
             st.success("Expense deleted")
 
-    st.write(f"**Total (USD):** ${total_usd:.2f}")
+    for currency, total_amount in totals_by_currency.items():
+        symbol = CURRENCY_SYMBOLS.get(currency, "")
+        st.write(f"**Total ({currency}):** {symbol}{total_amount:.2f} {currency}")
 
