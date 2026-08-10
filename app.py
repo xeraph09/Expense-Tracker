@@ -44,7 +44,6 @@ if add_expense:
         "category": category,
     })
     st.success("Expense added")
-    st.experimental_rerun()
 
 if st.session_state.edit_index is not None:
     index = st.session_state.edit_index
@@ -75,11 +74,9 @@ if st.session_state.edit_index is not None:
         }
         st.session_state.edit_index = None
         st.success("Expense updated")
-        st.experimental_rerun()
 
     if st.button("Cancel", key="cancel_edit"):
         st.session_state.edit_index = None
-        st.experimental_rerun()
 
 st.subheader("Your Expenses")
 
